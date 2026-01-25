@@ -1,0 +1,808 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Results · Dog Health Prediction</title>
+
+    <style>
+        :root {
+            /* iOS26-ish light fog */
+            --bg1: #f6f8ff;
+            --bg2: #eef2ff;
+            --bg3: #f7f7fb;
+            --glass: rgba(255,255,255,.58);
+            --glass2: rgba(255,255,255,.46);
+            --stroke: rgba(255,255,255,.62);
+            --text: rgba(17,24,39,.92);
+            --muted: rgba(17,24,39,.60);
+            --shadow: 0 18px 60px rgba(17,24,39,.12);
+            --shadow2: 0 10px 30px rgba(17,24,39,.10);
+            --blur: 22px;
+            --r: 22px;
+            --accent: #4f46e5; /* indigo */
+            --accent2: #60a5fa; /* sky */
+            --warn: #f59e0b;
+            --danger: #ef4444;
+            --ok: #22c55e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            min-height: 100vh;
+            font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+            color: var(--text);
+            padding: 22px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            overflow-x: hidden;
+            background: radial-gradient(900px 600px at 15% 10%, rgba(79,70,229,.12), transparent 55%), radial-gradient(900px 700px at 85% 20%, rgba(96,165,250,.14), transparent 60%), radial-gradient(1000px 800px at 50% 110%, rgba(245,158,11,.10), transparent 60%), linear-gradient(180deg, var(--bg1) 0%, var(--bg2) 45%, var(--bg3) 100%);
+        }
+
+        /* floating fog blobs */
+        .blob {
+            position: fixed;
+            width: 520px;
+            height: 520px;
+            border-radius: 50%;
+            filter: blur(45px);
+            opacity: .55;
+            z-index: -1;
+            animation: floaty 10s ease-in-out infinite;
+        }
+
+            .blob.b1 {
+                left: -180px;
+                top: -200px;
+                background: rgba(79,70,229,.18)
+            }
+
+            .blob.b2 {
+                right: -210px;
+                top: 120px;
+                background: rgba(96,165,250,.18);
+                animation-delay: -3s
+            }
+
+            .blob.b3 {
+                left: 20%;
+                bottom: -260px;
+                background: rgba(255,255,255,.55);
+                animation-delay: -6s
+            }
+
+        @keyframes floaty {
+            0%,100% {
+                transform: translate(0,0) scale(1)
+            }
+
+            50% {
+                transform: translate(30px,-22px) scale(1.05)
+            }
+        }
+
+        .wrap {
+            width: min(1100px,100%);
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .glass {
+            background: var(--glass);
+            border: 1px solid var(--stroke);
+            border-radius: var(--r);
+            box-shadow: var(--shadow);
+            -webkit-backdrop-filter: blur(var(--blur));
+            backdrop-filter: blur(var(--blur));
+        }
+
+        .topbar {
+            padding: 16px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .title {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            min-width: 260px;
+        }
+
+            .title h1 {
+                font-size: 18px;
+                font-weight: 860;
+                letter-spacing: .2px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+            .title p {
+                font-size: 13px;
+                color: var(--muted);
+                line-height: 1.35
+            }
+
+        .badges {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .badge {
+            font-size: 12px;
+            font-weight: 800;
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,.70);
+            background: rgba(255,255,255,.40);
+            color: rgba(17,24,39,.82);
+            -webkit-backdrop-filter: blur(18px);
+            backdrop-filter: blur(18px);
+            white-space: nowrap;
+        }
+
+            .badge.accent {
+                background: linear-gradient(135deg, rgba(79,70,229,.14), rgba(96,165,250,.14));
+                border-color: rgba(79,70,229,.20);
+            }
+
+            .badge.warn {
+                background: linear-gradient(135deg, rgba(245,158,11,.18), rgba(251,191,36,.14));
+                border-color: rgba(245,158,11,.22);
+            }
+
+        .btns {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-left: auto;
+        }
+
+        .btn {
+            appearance: none;
+            border: 1px solid rgba(255,255,255,.70);
+            background: rgba(255,255,255,.40);
+            color: rgba(17,24,39,.86);
+            padding: 10px 12px;
+            border-radius: 16px;
+            cursor: pointer;
+            font-weight: 780;
+            font-size: 13px;
+            transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+            -webkit-backdrop-filter: blur(18px);
+            backdrop-filter: blur(18px);
+        }
+
+            .btn:hover {
+                transform: translateY(-1px);
+                box-shadow: var(--shadow2);
+                background: rgba(255,255,255,.56);
+            }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1.2fr .8fr;
+            gap: 14px;
+        }
+
+        @media (max-width: 900px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            padding: 16px;
+            border-radius: var(--r);
+            background: var(--glass2);
+            border: 1px solid rgba(255,255,255,.62);
+            -webkit-backdrop-filter: blur(18px);
+            backdrop-filter: blur(18px);
+            box-shadow: var(--shadow2);
+        }
+
+        .section-title {
+            font-weight: 860;
+            font-size: 14px;
+            letter-spacing: .2px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .muted {
+            color: var(--muted)
+        }
+
+        .rows {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(17,24,39,.10);
+        }
+
+            .row:last-child {
+                border-bottom: none;
+                padding-bottom: 0
+            }
+
+        .k {
+            font-size: 12px;
+            font-weight: 800;
+            color: rgba(17,24,39,.65)
+        }
+
+        .v {
+            font-size: 13px;
+            font-weight: 780;
+            color: rgba(17,24,39,.88);
+            text-align: right;
+            max-width: 70%
+        }
+
+        .big {
+            font-size: 36px;
+            font-weight: 900;
+            letter-spacing: .2px;
+            line-height: 1;
+        }
+
+        .sub {
+            margin-top: 8px;
+            font-size: 13px;
+            color: var(--muted);
+            font-weight: 750;
+            line-height: 1.35
+        }
+
+        .bar {
+            height: 12px;
+            border-radius: 999px;
+            background: rgba(17,24,39,.10);
+            border: 1px solid rgba(255,255,255,.65);
+            overflow: hidden;
+            margin-top: 12px;
+        }
+
+            .bar > div {
+                height: 100%;
+                width: 0%;
+                border-radius: 999px;
+                background: linear-gradient(90deg, var(--ok), var(--warn), var(--danger));
+                transition: width .7s ease;
+            }
+
+        .grid-cards {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0,1fr));
+            gap: 14px;
+        }
+
+        @media (max-width: 900px) {
+            .grid-cards {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .disease-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .disease-name {
+            font-size: 16px;
+            font-weight: 900;
+            letter-spacing: .2px;
+        }
+
+        .pill {
+            font-size: 12px;
+            font-weight: 900;
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,.72);
+            background: rgba(255,255,255,.42);
+            white-space: nowrap;
+        }
+
+        .meter {
+            height: 30px;
+            border-radius: 999px;
+            background: rgba(17,24,39,.10);
+            border: 1px solid rgba(255,255,255,.65);
+            overflow: hidden;
+            margin: 10px 0 14px;
+        }
+
+        .fill {
+            height: 100%;
+            width: 0%;
+            border-radius: 999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 12px;
+            color: rgba(255,255,255,.95);
+            transition: width .7s ease;
+            background: linear-gradient(90deg, var(--ok), var(--accent2), var(--warn), #f97316, var(--danger));
+            text-shadow: 0 1px 8px rgba(0,0,0,.22);
+        }
+
+        .mini-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0,1fr));
+            gap: 10px;
+        }
+
+        .mini {
+            padding: 10px 12px;
+            border-radius: 16px;
+            background: rgba(255,255,255,.46);
+            border: 1px solid rgba(255,255,255,.70);
+        }
+
+            .mini.full {
+                grid-column: 1/-1
+            }
+
+            .mini .label {
+                font-size: 12px;
+                color: rgba(17,24,39,.60);
+                font-weight: 850;
+                margin-bottom: 6px
+            }
+
+            .mini .value {
+                font-size: 13px;
+                font-weight: 850;
+                color: rgba(17,24,39,.88);
+                line-height: 1.35
+            }
+
+                .mini .value.small {
+                    font-weight: 700;
+                    color: rgba(17,24,39,.78)
+                }
+
+        .notice {
+            padding: 14px 16px;
+            border-radius: 18px;
+            background: rgba(255,255,255,.46);
+            border: 1px solid rgba(255,255,255,.70);
+            color: rgba(17,24,39,.80);
+            font-size: 12.5px;
+            line-height: 1.45;
+        }
+
+        .empty {
+            padding: 18px;
+            text-align: center;
+            color: rgba(17,24,39,.70);
+            font-weight: 750;
+        }
+
+        code {
+            background: rgba(255,255,255,.55);
+            border: 1px solid rgba(255,255,255,.70);
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="blob b1"></div>
+    <div class="blob b2"></div>
+    <div class="blob b3"></div>
+
+    <div class="wrap">
+        <!-- Top bar -->
+        <div class="topbar glass">
+            <div class="title">
+                <h1>🐶 Results</h1>
+                <p id="subtitle">iOS26-style glass results · loaded from sessionStorage</p>
+            </div>
+
+            <div class="badges" id="badges"></div>
+
+            <div class="btns">
+                <button class="btn" id="btnBack">← Back</button>
+                <button class="btn" id="btnNew">＋ New analysis</button>
+                <button class="btn" id="btnCopy">Copy JSON</button>
+                <button class="btn" id="btnClear">Clear</button>
+            </div>
+        </div>
+
+        <!-- Profile + Overview -->
+        <div class="grid-2">
+            <div class="card" id="profileCard">
+                <div class="section-title">🧾 Input summary</div>
+                <div class="rows" id="profileRows"></div>
+            </div>
+
+            <div class="card" id="overviewCard">
+                <div class="section-title" id="overviewTitle">📌 Overview</div>
+                <div id="overviewBody"></div>
+            </div>
+        </div>
+
+        <!-- Main content: disease cards OR life card(s) -->
+        <div id="mainArea"></div>
+
+        <!-- Reliability / notes -->
+        <div class="notice glass" id="noticeBox"></div>
+    </div>
+
+    <script>
+    // ---- Storage keys (compat with what you already used) ----
+    const KEYS = {
+      disease: [
+        "dog_prediction_result",     // what we used earlier
+        "disease_prediction_result", // optional alternate
+        "prediction_result"          // fallback
+      ],
+      life: [
+        "life_prediction_result",
+        "dog_life_result",
+        "lifespan_prediction_result"
+      ],
+      // Optional: if you store the life input payload (recommended)
+      lifeInput: [
+        "life_prediction_input",
+        "dog_life_input"
+      ]
+    };
+
+    // Where to go when clicking "New analysis"
+    // Edit if your life input page is different.
+    const PAGES = {
+      home: "index.html" // your main input page
+      // lifeHome: "life_index.html" // if you create one later
+    };
+
+    function getFirstExistingKey(keys){
+      for (const k of keys){
+        const v = sessionStorage.getItem(k);
+        if (v && v.trim()) return { key:k, value:v };
+      }
+      return null;
+    }
+
+    function safeJSONParse(raw){
+      try{ return JSON.parse(raw); }catch{ return null; }
+    }
+
+    function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+    function fmt(n, digits=1){
+      if (typeof n !== "number" || !Number.isFinite(n)) return "—";
+      return n.toFixed(digits);
+    }
+
+    function setBadges(list){
+      const el = document.getElementById("badges");
+      el.innerHTML = "";
+      list.forEach(({text, cls})=>{
+        const b = document.createElement("div");
+        b.className = "badge" + (cls ? " " + cls : "");
+        b.textContent = text;
+        el.appendChild(b);
+      });
+    }
+
+    function renderProfile(rows){
+      const box = document.getElementById("profileRows");
+      box.innerHTML = "";
+      if (!rows.length){
+        box.innerHTML = `<div class="empty">No input summary available.</div>`;
+        return;
+      }
+      rows.forEach(({k, v})=>{
+        const row = document.createElement("div");
+        row.className = "row";
+        row.innerHTML = `<div class="k">${k}</div><div class="v">${v ?? "—"}</div>`;
+        box.appendChild(row);
+      });
+    }
+
+    // ---------- Disease rendering ----------
+    function reliabilityBadgeText(r){ return `⭐ Reliability: ${r ?? "—"}`; }
+
+    function diseaseCardHTML(p){
+      const risk = Number(p?.risk_score ?? 0);
+      const width = clamp(risk, 0, 100);
+
+      const disease = p?.disease ?? "—";
+      const reliability = p?.reliability ?? "—";
+      const interpretation = p?.interpretation ?? "—";
+      const confidence = (typeof p?.confidence === "number") ? `${p.confidence.toFixed(1)}%` : "—";
+      const auc = (typeof p?.auc_score === "number") ? p.auc_score.toFixed(4) : "—";
+      const explain = p?.reliability_explanation ?? "—";
+      const rec = p?.recommendation ?? "—";
+
+      return `
+        <div class="card">
+          <div class="disease-head">
+            <div class="disease-name">${disease}</div>
+            <div class="pill">${reliabilityBadgeText(reliability)}</div>
+          </div>
+
+          <div class="meter">
+            <div class="fill" style="width:${width}%">${fmt(risk,1)}%</div>
+          </div>
+
+          <div class="mini-grid">
+            <div class="mini">
+              <div class="label">Risk level</div>
+              <div class="value">${interpretation}</div>
+            </div>
+            <div class="mini">
+              <div class="label">Confidence</div>
+              <div class="value">${confidence}</div>
+            </div>
+            <div class="mini">
+              <div class="label">Model AUC</div>
+              <div class="value">${auc}</div>
+            </div>
+            <div class="mini full">
+              <div class="label">Why this reliability?</div>
+              <div class="value small">${explain}</div>
+            </div>
+            <div class="mini full">
+              <div class="label">Recommendation</div>
+              <div class="value small">${rec}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderDisease(pred){
+      // badges
+      const modelType = pred?.model_type ?? "Disease Prediction";
+      const honesty = pred?.honesty_level ?? "Honesty: uses provided info only";
+      setBadges([
+        { text: "🧬 Disease", cls: "accent" },
+        { text: modelType, cls: "accent" },
+        { text: honesty, cls: "" }
+      ]);
+
+      // profile
+      const prof = pred?.dog_profile ?? {};
+      renderProfile([
+        { k:"Age", v: prof.age ?? "—" },
+        { k:"Sex", v: prof.sex ?? "—" },
+        { k:"Breed status", v: prof.breed_status ?? "—" }
+      ]);
+
+      // overview
+      document.getElementById("overviewTitle").textContent = "📌 Disease overview";
+      const avg = Number(pred?.average_risk ?? NaN);
+      const avgW = Number.isFinite(avg) ? clamp(avg,0,100) : 0;
+      const summary = pred?.summary ?? "—";
+      document.getElementById("overviewBody").innerHTML = `
+        <div class="big">${Number.isFinite(avg) ? fmt(avg,1) + "%" : "—"}</div>
+        <div class="sub">Average risk across 5 diseases</div>
+        <div class="bar"><div style="width:${avgW}%"></div></div>
+        <div class="sub" style="margin-top:12px">${summary}</div>
+      `;
+
+      // main disease cards
+      const preds = Array.isArray(pred?.predictions) ? pred.predictions : [];
+      const main = document.getElementById("mainArea");
+      if (!preds.length){
+        main.innerHTML = `<div class="glass empty">No disease prediction data found.</div>`;
+      } else {
+        main.innerHTML = `
+          <div class="grid-cards">
+            ${preds.map(diseaseCardHTML).join("")}
+          </div>
+        `;
+      }
+
+      // notice
+      const note = pred?.reliability_note ?? "Predictions include reliability information when available.";
+      document.getElementById("noticeBox").innerHTML = `
+        <b>Reliability & disclaimer</b><br/>
+        ${note}<br/>
+        This tool provides statistical estimates and is not a medical diagnosis. If risk is elevated, consult a veterinarian.
+      `;
+    }
+
+    // ---------- Life rendering ----------
+    function renderLife(lifeObj, lifeInputObj){
+      setBadges([
+        { text: "⏳ Life prediction", cls: "accent" },
+        { text: "Remaining lifespan", cls: "" }
+      ]);
+
+      // profile (best effort)
+      const age = lifeInputObj?.Age_at_Condition ?? "—";
+      const breed = lifeInputObj?.dd_breed_pure_or_mixed ?? "—";
+      const spay = lifeInputObj?.dd_spayed_or_neutered ?? "—";
+      const weight = lifeInputObj?.weight_lbs ?? "—";
+
+      renderProfile([
+        { k:"Age at condition", v: age },
+        { k:"Breed (pure/mixed)", v: breed },
+        { k:"Spayed/Neutered", v: spay },
+        { k:"Weight (lbs)", v: weight }
+      ]);
+
+      document.getElementById("overviewTitle").textContent = "📌 Lifespan overview";
+
+      const years = Number(lifeObj?.predicted_remaining_lifespan ?? NaN);
+      const unit = lifeObj?.unit ?? "years";
+      const ok = (lifeObj?.status === "success");
+
+      // We don't have a reliability metric in the life API.
+      // Use a neutral UI with an explanation instead of fake confidence.
+      document.getElementById("overviewBody").innerHTML = `
+        <div class="big">${Number.isFinite(years) ? fmt(years,2) : "—"}</div>
+        <div class="sub">Predicted remaining lifespan (${unit})</div>
+        <div class="sub" style="margin-top:12px">
+          ${ok ? "Estimated from provided medical & lifestyle features." : "Prediction status not confirmed."}
+        </div>
+      `;
+
+      const main = document.getElementById("mainArea");
+      main.innerHTML = `
+        <div class="grid-2">
+          <div class="card">
+            <div class="section-title">🧠 What this means</div>
+            <div class="sub" style="margin-top:2px">
+              This value is a statistical estimate of <b>remaining lifespan</b>, not a guarantee.
+              Actual lifespan can vary with genetics, medical care, and future lifestyle changes.
+            </div>
+            <div class="sub" style="margin-top:10px">
+              Tip: If you want broader health context, run <b>Disease Risk Analysis</b> as well.
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="section-title">✅ Next actions</div>
+            <div class="sub">• Keep preventive care up to date (vaccines, dental, parasite control).</div>
+            <div class="sub">• Maintain healthy weight and activity.</div>
+            <div class="sub">• If a health condition is present, follow up with your veterinarian.</div>
+            <div class="sub" style="margin-top:10px">
+              (These are general wellness suggestions, not medical advice.)
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById("noticeBox").innerHTML = `
+        <b>Disclaimer</b><br/>
+        Lifespan prediction is a statistical model output and not a medical diagnosis. It does not include uncertainty intervals in the current API response.
+      `;
+    }
+
+    // ---------- Load from storage ----------
+    const diseaseRaw = getFirstExistingKey(KEYS.disease);
+    const lifeRaw = getFirstExistingKey(KEYS.life);
+
+    // Prefer disease if both exist (you can swap this rule if you want)
+    let activeRaw = diseaseRaw || lifeRaw;
+
+    // Update subtitle with key used
+    if (activeRaw){
+      document.getElementById("subtitle").textContent =
+        `Loaded from sessionStorage · key: ${activeRaw.key}`;
+    } else {
+      document.getElementById("subtitle").textContent =
+        `No stored result found in sessionStorage.`;
+    }
+
+    // Render
+    if (!activeRaw){
+      setBadges([{text:"No result", cls:"warn"}]);
+      renderProfile([]);
+      document.getElementById("overviewTitle").textContent = "📌 Overview";
+      document.getElementById("overviewBody").innerHTML = `
+        <div class="empty">
+          No stored result.<br/><br/>
+          Go back and run a prediction first.
+        </div>
+      `;
+      document.getElementById("mainArea").innerHTML = `
+        <div class="glass empty">
+          Tip: This page expects JSON stored in <code>sessionStorage</code>.
+        </div>
+      `;
+      document.getElementById("noticeBox").innerHTML = `
+        <b>How to fix</b><br/>
+        After a successful API response, store it in <code>sessionStorage</code> (e.g. <code>dog_prediction_result</code> or <code>life_prediction_result</code>) and navigate to <code>results.html</code>.
+      `;
+    } else {
+      const obj = safeJSONParse(activeRaw.value);
+
+      if (!obj){
+        setBadges([{text:"Invalid JSON", cls:"warn"}]);
+        renderProfile([]);
+        document.getElementById("overviewTitle").textContent = "📌 Overview";
+        document.getElementById("overviewBody").innerHTML = `<div class="empty">Stored JSON is invalid.</div>`;
+        document.getElementById("mainArea").innerHTML = `<div class="glass empty">Cannot render.</div>`;
+        document.getElementById("noticeBox").innerHTML = `<b>Error</b><br/>The value in sessionStorage could not be parsed as JSON.`;
+      } else {
+        // Detect type
+        const isDisease = Array.isArray(obj?.predictions) && typeof obj?.average_risk !== "undefined";
+        const isLife = typeof obj?.predicted_remaining_lifespan !== "undefined";
+
+        if (isDisease){
+          renderDisease(obj);
+        } else if (isLife){
+          // Try load life input (optional)
+          const liRaw = getFirstExistingKey(KEYS.lifeInput);
+          const li = liRaw ? safeJSONParse(liRaw.value) : null;
+          renderLife(obj, li);
+        } else {
+          setBadges([{text:"Unknown format", cls:"warn"}]);
+          renderProfile([]);
+          document.getElementById("overviewTitle").textContent = "📌 Overview";
+          document.getElementById("overviewBody").innerHTML = `<div class="empty">Unknown result format.</div>`;
+          document.getElementById("mainArea").innerHTML = `
+            <div class="glass empty">
+              This JSON does not match Disease or Life response formats.
+            </div>
+          `;
+          document.getElementById("noticeBox").innerHTML = `
+            <b>Expected formats</b><br/>
+            Disease: contains <code>predictions[]</code> and <code>average_risk</code>.<br/>
+            Life: contains <code>predicted_remaining_lifespan</code>.
+          `;
+        }
+      }
+    }
+
+    // Buttons
+    document.getElementById("btnBack").addEventListener("click", () => history.back());
+
+    document.getElementById("btnNew").addEventListener("click", () => {
+      window.location.href = PAGES.home;
+    });
+
+    document.getElementById("btnCopy").addEventListener("click", async () => {
+      if (!activeRaw) return alert("No JSON to copy.");
+      try{
+        await navigator.clipboard.writeText(activeRaw.value);
+        alert("Copied!");
+      }catch{
+        alert("Copy failed (browser permissions).");
+      }
+    });
+
+    document.getElementById("btnClear").addEventListener("click", () => {
+      // Clear known keys (safe)
+      [...KEYS.disease, ...KEYS.life, ...KEYS.lifeInput].forEach(k => sessionStorage.removeItem(k));
+      alert("Cleared stored results. Reloading…");
+      window.location.reload();
+    });
+    </script>
+</body>
+</html>
