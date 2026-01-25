@@ -1,0 +1,10 @@
+Metric,67 Features,19 Features
+Average AUC,0.6851,0.6419
+Average Accuracy,0.5774,0.5133
+Min AUC (67-feat),0.6423,-
+Min AUC (19-feat),-,0.5814
+Max AUC (67-feat),0.7253,-
+Max AUC (19-feat),-,0.7064
+Training Time,~2-3 seconds,~1 second
+Model Size,~15KB,~5KB
+Prediction Speed,~3ms per prediction,~1ms per prediction
