@@ -114,3 +114,4 @@ def optimize_lifespan(original_data: DogHealthData, model, model_cols):
         "years_gained": round(years_gained, 2),
         "suggested_changes": changes
     }
+
