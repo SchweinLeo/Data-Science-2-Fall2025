@@ -1,28 +1,17 @@
 import React, { useState } from 'react';
-import '../styles/DetailedAnalysis.css';
+import '../styles/DetailedAnalysis.css'; 
 
 /**
- * DetailedAnalysis component
- * --------------------------
- * This component collects extended (67-feature) health data for a dog.
- * It also allows reviewing and editing the previously entered basic profile.
- *
- * Props:
- * - prevData: basic dog profile data from the previous step
- * - onComplete: callback triggered when the user finishes the detailed form
- * - onBack: callback triggered when the user cancels or goes back
+ * DetailedAnalysis Component
+ * Handles the comprehensive health data entry, including a review of basic profile info
+ * and detailed environmental, dietary, and behavioral metrics.
  */
 const DetailedAnalysis = ({ prevData, onComplete, onBack }) => {
-  // Local copy of basic profile data (editable)
+  // State for the initial profile data (allows editing existing records)
   const [basicData, setBasicData] = useState({ ...prevData });
-
-  // Controls whether the basic profile is in edit mode
   const [isEditing, setIsEditing] = useState(false);
-
-  /**
-   * State for all additional detailed features.
-   * Keys are aligned with backend feature names.
-   */
+  
+  // State for the granular analysis form fields
   const [formData, setFormData] = useState({
     pa_moderate_weather_daily_hours_outside: '',
     pa_hot_weather_months_per_year: '',
@@ -50,69 +39,42 @@ const DetailedAnalysis = ({ prevData, onComplete, onBack }) => {
     de_other_present_animals_dogs: ''
   });
 
-  /**
-   * Handles changes to basic profile fields (name, breed, weight, etc.)
-   */
+  // Updates the top-level basic profile state
   const handleBasicChange = (e) => {
     const { name, value } = e.target;
     setBasicData({ ...basicData, [name]: value });
   };
 
-  /**
-   * Handles changes to detailed feature fields
-   */
+  // Updates the specific analysis form state
   const handleChange = (e) => {
     const { id, value } = e.target;
     setFormData({ ...formData, [id]: value });
   };
 
-  // Static option lists
-  const months = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
-  ];
-
-  const dietOptions = [
-    'Commercial Kibble',
-    'Commercial Wet',
-    'Freeze-dried',
-    'Home Cooked',
-    'Raw',
-    'Other'
-  ];
-
-  const incomeOptions = Array.from(
-    { length: 10 },
-    (_, i) => `$${i * 25000} - $${(i + 1) * 25000}`
-  ).concat(['$250,000+']);
+  // Configuration constants for dropdown selections
+  const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const dietOptions = ["Commercial Kibble", "Commercial Wet", "Freeze-dried", "Home Cooked", "Raw", "Other"];
+  const incomeOptions = Array.from({ length: 10 }, (_, i) => `$${i * 25000} - $${(i + 1) * 25000}`).concat(["$250,000+"]);
 
   return (
     <div className="detailed-viewport">
       <div className="detailed-card fade-in">
-
-        {/* Header */}
+        
         <header className="compact-header">
           <h1 className="brand-title">Precision Health Matrix</h1>
-          <p className="step-label">
-            Complete all indicators for {basicData.dogName}
-          </p>
+          <p className="step-label">Complete all 42 indicators for {basicData.dogName}</p>
         </header>
 
         <div className="form-content scrollable-container">
-
-          {/* Section 1: Basic profile review and optional editing */}
+          
+          {/* SECTION 1: BASIC PROFILE REVIEW (3 columns per row) */}
           <div className="compact-reference">
             <div className="ref-header-row">
               <h3 className="tiny-label">Basic Profile Review</h3>
-              <button
-                className="edit-toggle-btn"
-                onClick={() => setIsEditing(!isEditing)}
-              >
+              <button className="edit-toggle-btn" onClick={() => setIsEditing(!isEditing)}>
                 {isEditing ? 'Save Changes' : 'Edit Basic Info'}
               </button>
             </div>
-
-            {/* Grid layout for basic profile fields */}
             <div className="ref-grid-3">
               {[
                 { label: 'Name', name: 'dogName', type: 'text' },
@@ -121,7 +83,7 @@ const DetailedAnalysis = ({ prevData, onComplete, onBack }) => {
                 { label: 'Birth Year', name: 'birthYear', type: 'number' },
                 { label: 'Birth Month', name: 'birthMonth', type: 'select', options: months },
                 { label: 'Weight (kg)', name: 'weight', type: 'number' },
-                { label: 'Breed State', name: 'breedState', type: 'select', options: ['Pure', 'Mixed'] },
+                { label: 'Breed Status', name: 'breedState', type: 'select', options: ['Pure', 'Mixed'] },
                 { label: 'Active Hours', name: 'dailyActiveHours', type: 'number' },
                 { label: 'Activity Level', name: 'activityLevel', type: 'select', options: ['Low', 'Moderate', 'High', 'Very High'] },
                 { label: 'Intensity', name: 'activityIntensity', type: 'select', options: ['Light', 'Moderate', 'Intense'] },
@@ -139,31 +101,18 @@ const DetailedAnalysis = ({ prevData, onComplete, onBack }) => {
                     <div className="ref-edit-box">
                       <label>{field.label}</label>
                       {field.type === 'select' ? (
-                        <select
-                          name={field.name}
-                          value={basicData[field.name] || ''}
-                          onChange={handleBasicChange}
-                        >
+                        <select name={field.name} value={basicData[field.name] || ''} onChange={handleBasicChange}>
                           <option value="">Select</option>
-                          {field.options.map(opt => (
-                            <option key={opt} value={opt}>{opt}</option>
-                          ))}
+                          {field.options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                         </select>
                       ) : (
-                        <input
-                          type={field.type}
-                          name={field.name}
-                          value={basicData[field.name] || ''}
-                          onChange={handleBasicChange}
-                        />
+                        <input type={field.type} name={field.name} value={basicData[field.name] || ''} onChange={handleBasicChange} />
                       )}
                     </div>
                   ) : (
                     <div className="ref-display-box">
                       <span className="cell-label">{field.label}:</span>
-                      <span className="cell-value">
-                        {basicData[field.name] || '--'}
-                      </span>
+                      <span className="cell-value">{basicData[field.name] || '--'}</span>
                     </div>
                   )}
                 </div>
@@ -171,86 +120,48 @@ const DetailedAnalysis = ({ prevData, onComplete, onBack }) => {
             </div>
           </div>
 
-          {/* Section 2–5: Detailed feature input fields */}
           <div className="tight-form-body grid-3">
+            {/* SECTION 2: PHYSICAL ACTIVITY */}
+            <h3 className="section-divider">Physical Activity Details</h3>
+            <div className="field-group"><label>Mod. Weather Hours</label><input type="number" id="pa_moderate_weather_daily_hours_outside" step="0.5" placeholder="Hours" onChange={handleChange} /></div>
+            <div className="field-group"><label>Hot Months/Year</label><input type="number" id="pa_hot_weather_months_per_year" step="0.1" placeholder="Count" onChange={handleChange} /></div>
+            <div className="field-group"><label>Cold Months/Year</label><input type="number" id="pa_cold_weather_months_per_year" step="0.1" placeholder="Count" onChange={handleChange} /></div>
 
-            <h3 className="section-divider">Physical Activity</h3>
-            <div className="field-group">
-              <label>Moderate Weather Hours</label>
-              <input
-                type="number"
-                id="pa_moderate_weather_daily_hours_outside"
-                step="0.5"
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="field-group">
-              <label>Hot Months per Year</label>
-              <input
-                type="number"
-                id="pa_hot_weather_months_per_year"
-                step="0.1"
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="field-group">
-              <label>Cold Months per Year</label>
-              <input
-                type="number"
-                id="pa_cold_weather_months_per_year"
-                step="0.1"
-                onChange={handleChange}
-              />
-            </div>
-
+            {/* SECTION 3: DIET DETAILS */}
             <h3 className="section-divider">Diet & Supplements</h3>
-            <div className="field-group">
-              <label>Diet Consistency</label>
-              <select id="df_diet_consistency" onChange={handleChange}>
-                <option value="">Select</option>
-                <option>Consistent</option>
-                <option>Variable</option>
-                <option>Unknown</option>
-              </select>
-            </div>
+            <div className="field-group"><label>Diet Consistency</label><select id="df_diet_consistency" onChange={handleChange}><option value="">-- Select --</option><option>Consistent</option><option>Variable</option><option>Unknown</option></select></div>
+            <div className="field-group"><label>Appetite Change</label><select id="df_appetite_change_last_year" onChange={handleChange}><option value="">-- Select --</option><option>No</option><option>Yes</option><option>Unknown</option></select></div>
+            <div className="field-group"><label>Ever Overweight</label><select id="df_ever_overweight" onChange={handleChange}><option value="">-- Select --</option><option>Yes</option><option>No</option><option>Unknown</option></select></div>
+            <div className="field-group"><label>Daily Supps</label><select id="df_daily_supplements" onChange={handleChange}><option value="">-- Select --</option><option>Yes</option><option>No</option></select></div>
+            <div className="field-group"><label>Glucosamine</label><select id="df_daily_supplements_glucosamine" onChange={handleChange}><option value="">-- Select --</option><option>Yes</option><option>No</option></select></div>
+            <div className="field-group"><label>Omega-3</label><select id="df_daily_supplements_omega3" onChange={handleChange}><option value="">-- Select --</option><option>Yes</option><option>No</option></select></div>
 
+            {/* SECTION 4: BEHAVIOR & MEDICAL */}
+            <h3 className="section-divider">Behavior & Medical Care</h3>
+            <div className="field-group"><label>Fear: Unknown</label><select id="db_fear_level_unknown_situations" onChange={handleChange}><option value="">-- Select --</option><option>Low</option><option>Moderate</option><option>High</option><option>Unknown</option></select></div>
+            <div className="field-group"><label>Barking (Alone)</label><select id="db_left_alone_barking_frequency" onChange={handleChange}><option value="">-- Select --</option><option>Never</option><option>Rarely</option><option>Often</option><option>Unknown</option></select></div>
+            <div className="field-group"><label>Attention Seeking</label><select id="db_attention_seeking_follows_humans_frequency" onChange={handleChange}><option value="">-- Select --</option><option>Rarely</option><option>Sometimes</option><option>Often</option><option>Unknown</option></select></div>
+            <div className="field-group"><label>Dental Brushing</label><select id="mp_dental_brushing_frequency" onChange={handleChange}><option value="">-- Select --</option><option>Never</option><option>Rarely</option><option>Sometimes</option><option>Daily</option></select></div>
+            <div className="field-group"><label>Flea Treatment</label><select id="mp_flea_and_tick_treatment" onChange={handleChange}><option value="">-- Select --</option><option>Never</option><option>Annually</option><option>Monthly</option><option>Unknown</option></select></div>
+            <div className="field-group"><label>Heartworm Prev</label><select id="mp_heartworm_preventative" onChange={handleChange}><option value="">-- Select --</option><option>Yes</option><option>No</option><option>Unknown</option></select></div>
+
+            {/* SECTION 5: ENVIRONMENT & HOUSEHOLD */}
             <h3 className="section-divider">Environment & Household</h3>
-            <div className="field-group">
-              <label>Night Sleep (hours)</label>
-              <input
-                type="number"
-                id="de_nighttime_sleep_avg_hours"
-                step="0.5"
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="field-group">
-              <label>Day Sleep (hours)</label>
-              <input
-                type="number"
-                id="de_daytime_sleep_avg_hours"
-                step="0.5"
-                onChange={handleChange}
-              />
-            </div>
+            <div className="field-group"><label>Sleep (Night)</label><input type="number" id="de_nighttime_sleep_avg_hours" step="0.5" onChange={handleChange} /></div>
+            <div className="field-group"><label>Sleep (Day)</label><input type="number" id="de_daytime_sleep_avg_hours" step="0.5" onChange={handleChange} /></div>
+            <div className="field-group"><label>Water Source</label><select id="de_drinking_water_source" onChange={handleChange}><option value="">-- Select --</option><option>Tap</option><option>Filtered</option><option>Bottled</option><option>Well</option></select></div>
+            <div className="field-group"><label>Radon Present</label><select id="de_radon_present" onChange={handleChange}><option value="">-- Select --</option><option>Yes</option><option>No</option><option>Unknown</option></select></div>
+            <div className="field-group"><label>Air Condition</label><select id="de_central_air_conditioning_present" onChange={handleChange}><option value="">-- Select --</option><option>Yes</option><option>No</option></select></div>
+            <div className="field-group"><label>Stairs in Home</label><select id="de_stairs_in_home" onChange={handleChange}><option value="">-- Select --</option><option>Yes</option><option>No</option></select></div>
+            <div className="field-group"><label>People Count</label><input type="number" id="oc_household_person_count" onChange={handleChange} /></div>
+            <div className="field-group"><label>Child Count</label><input type="number" id="oc_household_child_count" onChange={handleChange} /></div>
+            <div className="field-group"><label>Other Dogs</label><input type="number" id="de_other_present_animals_dogs" onChange={handleChange} /></div>
           </div>
 
-          {/* Action buttons */}
           <div className="btn-container split sticky-bottom">
-            <button className="btn-outline-pill" onClick={onBack}>
-              Cancel
-            </button>
-            <button
-              className="btn-solid-pill"
-              onClick={() => onComplete({ ...basicData, ...formData })}
-            >
-              Run Deep Analysis ✓
-            </button>
+            <button className="btn-outline-pill" onClick={onBack}>Cancel</button>
+            <button className="btn-solid-pill" onClick={() => onComplete({...basicData, ...formData})}>Run Deep Analysis ✓</button>
           </div>
-
         </div>
       </div>
     </div>
