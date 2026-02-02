@@ -119,7 +119,6 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "https://data-science-2-fall2025.vercel.app",  #  Vercel 
-        "http://localhost:3000"                       # local
     ],
     allow_credentials=True,
     allow_methods=["*"],
