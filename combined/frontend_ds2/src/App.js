@@ -5,29 +5,35 @@ import DetailedAnalysis from './components/DetailedAnalysis';
 import FinalReportPage from './components/FinalReportPage';
 import './App.css';
 
+/** * PRODUCTION CONFIGURATION
+ * Replace localhost with your live Render backend URL.
+ * Ensure your backend's CORS settings allow requests from your Vercel domain.
+ */
+const API_BASE = "https://ds2-fall2025-dog-health-backend.onrender.com"; 
+
 const App = () => {
-  // Stores the current view's API response (basic or detailed)
+  // resultData: Stores the current API response (basic or detailed results)
   const [resultData, setResultData] = useState(null);
 
-  // Stores the basic result response as a backup (includes lifespan fields)
+  // basicResultData: Caches the initial result to allow "Back" navigation from final reports
   const [basicResultData, setBasicResultData] = useState(null);
 
-  // Stores the last submitted basic form data (used to prefill detailed step)
+  // formData: Persists the primary form input to pre-fill the detailed analysis step
   const [formData, setFormData] = useState(null);
 
-  // Controls the loading overlay visibility
+  // loading: Controls the visibility of the full-screen analysis overlay
   const [loading, setLoading] = useState(false);
 
-  // View state machine: form -> result -> detailed -> final
+  // view: State machine for navigation ('form' -> 'result' -> 'detailed' -> 'final')
   const [view, setView] = useState('form');
 
-  // Controls which loading message to show (basic vs detailed)
+  // analysisType: Switches the loading message context (basic vs clinical)
   const [analysisType, setAnalysisType] = useState('basic');
 
   /**
-   * Submits the basic assessment request to /predict
-   * - Saves the response to resultData
-   * - Also caches it into basicResultData so we can restore it later
+   * handleFormSubmit:
+   * Communicates with the /predict endpoint for the initial lifespan and risk assessment.
+   * Triggered by the DogForm component.
    */
   const handleFormSubmit = async (data) => {
     setAnalysisType('basic');
@@ -35,46 +41,50 @@ const App = () => {
     setFormData(data);
 
     try {
-      const response = await fetch('http://localhost:8000/predict', {
+      // Connects to the Render production API
+      const response = await fetch(`${API_BASE}/predict`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
       });
 
+      if (!response.ok) throw new Error('Backend is sleeping or unreachable');
+
       const result = await response.json();
 
-      // Add a short delay for a smoother loading experience
+      // Artificial delay to ensure the UI transitions smoothly during heavy ML processing
       setTimeout(() => {
         setResultData(result);
-        setBasicResultData(result);
+        setBasicResultData(result); 
         setLoading(false);
         setView('result');
       }, 1500);
     } catch (err) {
       setLoading(false);
-      alert('Error: ' + err.message);
+      alert('Network Error: ' + err.message + '. Please ensure the backend is awake.');
     }
   };
 
   /**
-   * Submits the detailed assessment request to /predict_detailed
-   * - Updates resultData with the detailed response
-   * - The detailed response may not include lifespan fields
+   * handleDetailedSubmit:
+   * Communicates with the /predict_detailed endpoint using 67 clinical variables.
+   * Triggered by the DetailedAnalysis component.
    */
   const handleDetailedSubmit = async (fullData) => {
     setAnalysisType('detailed');
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8000/predict_detailed', {
+      const response = await fetch(`${API_BASE}/predict_detailed`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(fullData)
       });
 
+      if (!response.ok) throw new Error('Detailed analysis failed');
+
       const detailedResult = await response.json();
 
-      // Add a short delay for a smoother loading experience
       setTimeout(() => {
         setResultData(detailedResult);
         setLoading(false);
@@ -87,8 +97,9 @@ const App = () => {
   };
 
   /**
-   * Restores the basic result page after viewing the final (detailed) report
-   * This is needed because the detailed response may not contain lifespan data.
+   * handleBackToResult:
+   * Re-sets the UI state to the cached basic result data.
+   * Necessary because detailed results might not include initial lifespan predictions.
    */
   const handleBackToResult = () => {
     setResultData(basicResultData);
@@ -96,7 +107,8 @@ const App = () => {
   };
 
   /**
-   * Resets the entire flow back to the form view
+   * handleReset:
+   * Resets all states to default to allow a fresh start for a new pet assessment.
    */
   const handleReset = () => {
     setResultData(null);
@@ -108,21 +120,17 @@ const App = () => {
 
   return (
     <main className="app-main">
-      {/* Full-screen loading overlay */}
+      {/* 1. ANIMATED LOADING OVERLAY */}
       {loading && (
         <div className="analysis-overlay fade-in">
           <div className="loader-content">
             <div className="pulse-ring">
               <span className="loader-emoji">🐕</span>
             </div>
-
             <h2 className="loader-text">Analyzing Health Data</h2>
-
             <div className="loader-bar-container">
               <div className="loader-bar-fill"></div>
             </div>
-
-            {/* Loading message changes depending on the analysis type */}
             <p className="loader-subtext">
               {analysisType === 'basic'
                 ? 'Calculating longevity & risk factors...'
@@ -132,12 +140,12 @@ const App = () => {
         </div>
       )}
 
-      {/* Wrapper to optionally blur underlying content when loading */}
+      {/* 2. DYNAMIC VIEW CONTAINER */}
       <div className={`view-wrapper ${loading ? 'content-blur' : ''}`}>
-        {/* Step 1: Input form */}
+        {/* PHASE 1: Data Entry */}
         {view === 'form' && <DogForm onSubmit={handleFormSubmit} />}
 
-        {/* Step 2: Basic results */}
+        {/* PHASE 2: Initial Predictions Display */}
         {view === 'result' && resultData && (
           <ResultPage
             data={resultData}
@@ -146,7 +154,7 @@ const App = () => {
           />
         )}
 
-        {/* Step 3: Detailed input form */}
+        {/* PHASE 3: Comprehensive Clinical Data Entry */}
         {view === 'detailed' && (
           <DetailedAnalysis
             prevData={formData}
@@ -155,7 +163,7 @@ const App = () => {
           />
         )}
 
-        {/* Step 4: Final report (basic vs advanced comparison) */}
+        {/* PHASE 4: Final Diagnostic Comparison Report */}
         {view === 'final' && resultData && (
           <FinalReportPage
             data={resultData}
