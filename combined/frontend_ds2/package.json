@@ -1,7 +1,6 @@
 {
   "name": "dog-aging-app",
   "version": "0.1.0",
-  "homepage": "https://a-rehmn.github.io/Data-Science-2-Fall2025",
   "private": true,
   "dependencies": {
     "@testing-library/dom": "^10.4.1",
