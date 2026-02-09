@@ -39,7 +39,7 @@ def preprocess_lifespan(data, model_cols):
         "dd_breed_mixed_secondary": data.secondaryBreed,
         "df_primary_diet_component": normalize_diet_component_lifespan(data.primaryDiet),
         "mp_vaccination_status": 1 if data.vaccinationStatus.lower() == "current" else 0,
-        "weight_lbs": data.weight * 2.20462,
+        "weight_lbs": 0 if age < 8 else data.weight * 2.20462,
         "pa_avg_activity_intensity": map_activity_intensity(data.activityIntensity),
     }
     df = pd.DataFrame([raw_dict])
